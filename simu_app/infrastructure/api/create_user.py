@@ -12,7 +12,7 @@ def lambda_handler(event, context):
         body = json.loads(event['body'])
         
         
-        print(json.dumps(body))
+        # print(json.dumps(body))
         
         # Validate required fields
         required_fields = ['username', 'email']

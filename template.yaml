@@ -28,7 +28,7 @@ Resources:
           Type: Api
           Properties:
             Path: /new-transaction
-            Method: POST
+            Method: GET
 
   CreateUserFunction:
     Type: AWS::Serverless::Function
