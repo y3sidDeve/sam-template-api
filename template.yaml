@@ -14,6 +14,7 @@ Globals:
     LoggingConfig:
       LogFormat: JSON
 Resources:
+
   TransactionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -27,7 +28,54 @@ Resources:
           Type: Api
           Properties:
             Path: /new-transaction
-            Method: get
+            Method: POST
+
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: simu_app/
+      Handler: infrastructure.api.create_user.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Events:
+        CreateUser:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: POST
+
+  GetUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: simu_app/
+      Handler: infrastructure.api.get_user.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Events:
+        GetUser:
+          Type: Api
+          Properties:
+            Path: /users/{userId}
+            Method: GET
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  
+
+  
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
