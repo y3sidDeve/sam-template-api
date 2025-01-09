@@ -5,8 +5,8 @@ codeuri = "X:\\API SERVERLESS SIMU\\simu-app\\simu_app"
 runtime = "python3.12"
 architecture = "x86_64"
 handler = "app.lambda_handler"
-manifest_hash = "3298f13049d19cffaa37ca931dd4d421"
+manifest_hash = "1861be9efa0d055614dbdd09b12dd0bb"
 packagetype = "Zip"
-functions = ["HelloWorldFunction", "TransactionFunction"]
+functions = ["TransactionFunction", "CreateUserFunction", "GetAllUsersFunction", "GetUserFunction"]
 
 [layer_build_definitions]
