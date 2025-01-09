@@ -2,13 +2,14 @@
 import boto3
 import logging
 from typing import Optional
-from domain.entities.user import User
-from domain.ports.user_repository import UserRepository
+from core.entities.user import User
+from core.ports.user_repository import UserRepository
 from botocore.exceptions import ClientError
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class DynamoDBUserRepository(UserRepository):
     """
@@ -38,7 +39,8 @@ class DynamoDBUserRepository(UserRepository):
             self.table.put_item(Item=user_dict)
             logger.info(f"User created successfully: {user_dict}")
         except ClientError as e:
-            logger.error(f"Failed to create user: {e.response['Error']['Message']}")
+            logger.error(f"Failed to create user: {
+                         e.response['Error']['Message']}")
             raise
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
@@ -63,8 +65,10 @@ class DynamoDBUserRepository(UserRepository):
             else:
                 logger.info(f"No user found with ID: {user_id}")
                 return None
+
         except ClientError as e:
-            logger.error(f"Failed to retrieve user: {e.response['Error']['Message']}")
+            logger.error(f"Failed to retrieve user: {
+                         e.response['Error']['Message']}")
             return None
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
@@ -93,8 +97,36 @@ class DynamoDBUserRepository(UserRepository):
                 logger.info(f"No user found with email: {email}")
                 return None
         except ClientError as e:
-            logger.error(f"Failed to retrieve user: {e.response['Error']['Message']}")
+            logger.error(f"Failed to retrieve user: {
+                         e.response['Error']['Message']}")
             return None
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
             return None
+
+    def get_all_users(self) -> list[User]:
+        """
+        Get all users from DynamoDB
+        Returns:
+            List of User entities
+        """
+        logger.debug("Retrieving all users")
+        
+        
+        try:
+            response = self.table.scan()
+            items = response.get('Items', [])
+            
+            users = items
+            logger.info(f"Retrieved {len(users)} users")
+            return users
+        
+        
+        except ClientError as e:
+            logger.error(f"Failed to retrieve users: {
+                         e.response['Error']['Message']}"
+                         )
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return []

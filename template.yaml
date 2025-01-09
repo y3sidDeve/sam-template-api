@@ -46,6 +46,23 @@ Resources:
             Path: /users/
             Method: POST
 
+
+  GetAllUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: simu_app/
+      Handler: infrastructure.api.get_all_users.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Events:
+        GetAllUsers:
+          Type: Api
+          Properties:
+            Path: /users/
+            Method: GET
+
+
   GetUserFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -55,9 +72,6 @@ Resources:
       Architectures:
         - x86_64
 
-      Environment:
-        Variables:
-          DYNAMODB_ENDPOINT: http://localhost:8000
       Events:
         GetUser:
           Type: Api

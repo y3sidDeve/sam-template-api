@@ -28,8 +28,8 @@ class User:
         Create a User object from a dictionary.
         """
         return User(
-            id=data['userId'],  # Corregido: coincide con el nombre de la clave en DynamoDB
-            username=data['username'],  # Corregido: coincide con el nombre de la clave en DynamoDB
+            id=data['userId'], 
+            username=data['username'],
             email=data['email'],
             created_at=datetime.fromisoformat(data['created_at']),
             updated_at=datetime.fromisoformat(data['updated_at']) if data.get('updated_at') else None

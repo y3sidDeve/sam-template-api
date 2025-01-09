@@ -12,10 +12,7 @@ class Transaction:
         self.description = description
         self.user_id = user_id
         self.created_at = datetime.now(timezone.utc)
-        
-        
 
-# from datetime import timezone
 
     def is_valid(self) -> bool:
         # Lógica de negocio para validar una transacción

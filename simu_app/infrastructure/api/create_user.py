@@ -3,55 +3,48 @@ import uuid
 from datetime import datetime
 from http import HTTPStatus
 
-from domain.entities.user import User
+from core.entities.user import User
 from infrastructure.repositories.dynamodb_user_repository import DynamoDBUserRepository
+from application.use_cases.create_user import CreateUserUseCase
 
 
 def lambda_handler(event, context):
-    
-    
     timezone = datetime.now().astimezone().tzinfo
+
     try:
         # Parse request body
         body = json.loads(event['body'])
 
-        # print(json.dumps(body))
-
         # Validate required fields
         required_fields = ['username', 'email']
-        if not all(field in body for field in required_fields):
+        missing_fields = [field for field in required_fields if field not in body]
+
+        if missing_fields:
             return {
                 'statusCode': HTTPStatus.BAD_REQUEST,
-                'body': json.dumps({'error': 'Missing required fields'})
+                'body': json.dumps({'error': 'Missing required fields', 'fields': missing_fields})
             }
 
-        # Create user instance
-        user = User(
-            id=str(uuid.uuid4()),
-            username=body['username'],
-            email=body['email'],
-            # from datetime import timezone
-            created_at=datetime.now(timezone.utc)
-        )
+        # Extract user data from request body
+        username = body['username']
+        email = body['email']
 
-        # Initialize repository
+        # Generate a unique user ID and initialize a user entity
+        user_id = str(uuid.uuid4())
+        created_at = datetime.now(timezone.utc)
 
+        user = User(id=user_id, username=username, email=email, created_at=created_at)
+
+        # Initialize repository and use case
         repository = DynamoDBUserRepository(table_name='Users')
+        use_case = CreateUserUseCase(user_repository=repository)
 
-        # Check if user with email already exists
-        existing_user = repository.get_by_email(user.email)
-        if existing_user:
-            return {
-                'statusCode': HTTPStatus.CONFLICT,
-                'body': json.dumps({'error': 'User with this email already exists'})
-            }
-
-        # Save user to DynamoDB
-        created_user = repository.create(user)
+        # Execute use case
+        created_user = use_case.execute(user)
 
         return {
             'statusCode': HTTPStatus.CREATED,
-            'body': json.dumps(created_user.to_dict())
+            'body': json.dumps({'message': 'User created successfully', 'user': created_user.to_dict()})
         }
 
     except json.JSONDecodeError:
@@ -59,8 +52,17 @@ def lambda_handler(event, context):
             'statusCode': HTTPStatus.BAD_REQUEST,
             'body': json.dumps({'error': 'Invalid JSON in request body'})
         }
+
+    except ValueError as e:
+        # Handle specific business logic errors
+        return {
+            'statusCode': HTTPStatus.CONFLICT,
+            'body': json.dumps({'error': str(e)})
+        }
+
     except Exception as e:
+        # Catch unexpected errors
         return {
             'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR,
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps({'error': 'An unexpected error occurred', 'details': str(e)})
         }

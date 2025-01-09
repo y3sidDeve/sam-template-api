@@ -1,60 +1,46 @@
 import json
 from http import HTTPStatus
+from application.use_cases.get_user_by_id import GetUserByIdUseCase
 from infrastructure.repositories.dynamodb_user_repository import DynamoDBUserRepository
 
 
 def lambda_handler(event, context):
     try:
-        # Get user ID from path parameters
+        # Obtener el user_id de los parámetros del evento
         user_id = event['pathParameters'].get('user_id')
 
-        
-        print(f'user ID es: {user_id}')
-        
-        if not user_id:
-            return {
-                'statusCode': HTTPStatus.BAD_REQUEST,
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                'body': json.dumps({'error': 'User ID is required'})
-            }
-
-        # Initialize repository
+        # Inicializar el repositorio y el caso de uso
         repository = DynamoDBUserRepository(table_name='Users')
+        use_case = GetUserByIdUseCase(user_repository=repository)
 
-        # Get user from DynamoDB
-        user = repository.get_by_id(user_id)
-        
-        
-        print(f"User: {user}")
+        # Ejecutar el caso de uso
+        user = use_case.execute(user_id)
 
-        if not user or user is None:
-            
-            print('not user')
+        if not user:
             return {
                 'statusCode': HTTPStatus.NOT_FOUND,
-                "headers": {
-                    "Content-Type": "application/json"
-                },
+                "headers": {"Content-Type": "application/json"},
                 'body': json.dumps({'error': 'User not found'})
             }
 
-        # Return user data in response
+        # Responder con los datos del usuario
         return {
             'statusCode': HTTPStatus.OK,
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            # Assumes the User class has a to_dict() method
+            "headers": {"Content-Type": "application/json"},
             'body': json.dumps(user.to_dict())
         }
 
-    except Exception as e:
+    except ValueError as e:
         return {
-            'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR,
+            'statusCode': HTTPStatus.BAD_REQUEST,
             "headers": {
                 "Content-Type": "application/json"
             },
+            'body': json.dumps({'error': str(e)})
+        }
+    except Exception as e:
+        return {
+            'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR,
+            "headers": {"Content-Type": "application/json"},
             'body': json.dumps({'error': str(e)})
         }
