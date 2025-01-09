@@ -1,153 +1,86 @@
-# API de Procesamiento de Transacciones Serverless
+# Plantilla Serverless con Arquitectura Hexagonal
 
-Este proyecto implementa una API serverless para la creación y gestión de transacciones financieras utilizando AWS Lambda y API Gateway.
+## Descripción
 
-La aplicación está construida usando el Modelo de Aplicaciones Serverless de AWS (SAM) y proporciona un endpoint sencillo para crear nuevas transacciones. Demuestra el uso de principios de diseño orientados al dominio al separar la lógica de dominio (entidad transacción) de las preocupaciones de infraestructura (manejo de la API).
+Esta plantilla serverless está diseñada como un punto de partida para construir proyectos que sigan principios de la arquitectura hexagonal. Incluye un conjunto básico de funciones CRUD (Crear, Leer, Actualizar y Eliminar) para usuarios, lo cual sirve como ejemplo para exponer las capacidades de la arquitectura y las APIs. Está optimizada para implementaciones en entornos serverless como AWS Lambda, utilizando DynamoDB como base de datos.
 
-La API está diseñada para ser escalable y fácilmente extensible, lo que la hace adecuada para diversos tipos de Testing.
+### Características principales
 
-## Estructura del Repositorio
+- **Arquitectura Hexagonal**: Separación clara de responsabilidades en capas:
+  - **Application**: Contiene los casos de uso del dominio.
+  - **Core**: Define las entidades y los puertos necesarios para la interacción con los adaptadores.
+  - **Infrastructure**: Implementa los adaptadores necesarios para la API y la interacción con la base de datos.
 
+- **Compatibilidad Serverless**: Optimizada para servicios como AWS Lambda y DynamoDB.
+- **Código Modular y Escalable**: Organizado para facilitar la extensión del proyecto.
+
+## Estructura del Proyecto
+
+```plaintext
+│   requirements.txt
+│   __init__.py
+│
+├───application
+│   └───use_cases
+│           create_user.py
+│           get_all_users.py
+│           get_user_by_id.py
+│
+├───core
+│   ├───entities
+│   │       transaction.py
+│   │       user.py
+│   │       __init__.py
+│   │
+│   └───ports
+│           user_repository.py
+│           __init__.py
+│
+└───infrastructure
+    │   __init__.py
+    │
+    ├───api
+    │       create_transaction.py
+    │       create_user.py
+    │       get_all_users.py
+    │       get_user.py
+    │       __init__.py
+    │
+    └───repositories
+            dynamodb_user_repository.py
+            __init__.py
 ```
-.
-├── __init__.py
-├── events
-│   └── event.json
-├── README.md
-├── simu_app
-│   ├── __init__.py
-│   ├── domain
-│   │   └── entities
-│   │       └── transaction.py
-│   └── infrastructure
-│       └── api
-│           └── create_transaction.py
-├── template.yaml
-└── tests
-    ├── __init__.py
-    ├── integration
-    │   ├── __init__.py
-    │   └── test_api_gateway.py
-    └── unit
-        ├── __init__.py
-        └── test_handler.py
-```
 
-### Archivos Clave:
-- `template.yaml`: Plantilla SAM que define los recursos de AWS y la configuración de la API.
-- `simu_app/domain/entities/transaction.py`: Contiene la definición de la entidad Transacción.
-- `simu_app/infrastructure/api/create_transaction.py`: Manejador Lambda para la creación de transacciones.
-- `tests/integration/test_api_gateway.py`: Pruebas de integración para API Gateway.
-- `tests/unit/test_handler.py`: Pruebas unitarias para el manejador Lambda.
+## Instrucciones Generales
 
-## Instrucciones de Uso
-
-### Requisitos Previos
-- AWS CLI instalado y configurado.
-- AWS SAM CLI instalado.
-- Python 3.12.
-
-### Instalación
-
-1. Clonar el repositorio:
-   ```
-   git clone <repository-url>
-   cd <repository-name>
-   ```
-
-2. Instalar dependencias:
-   ```
+1. **Instalar dependencias**:
+   Asegúrate de tener Python instalado. Luego, instala las dependencias ejecutando:
+   ```bash
    pip install -r requirements.txt
    ```
 
-3. Desplegar la aplicación:
+2. **Configurar las credenciales de AWS**:
+   Configura las credenciales necesarias para acceder a los servicios de AWS.
+   ```bash
+   aws configure
    ```
-   sam build
-   sam deploy --guided
-   ```
 
-   Siga las indicaciones para configurar los ajustes de despliegue.
+3. **Desplegar en AWS**:
+   Puedes usar herramientas como `Serverless Framework`, `AWS SAM`, o `AWS CDK` para desplegar esta plantilla. Asegúrate de definir las funciones y sus permisos en el archivo correspondiente (por ejemplo, `serverless.yml` o `template.yaml`).
 
-### Pruebas
+4. **Ejecutar localmente**:
+   Utiliza herramientas como `sam local` o `serverless invoke local` para probar las funciones antes de desplegarlas.
 
-Para ejecutar pruebas unitarias:
-```
-python -m pytest tests/unit
-```
+5. **Extender el proyecto**:
+   - Agrega nuevos casos de uso en la capa `application/use_cases`.
+   - Define nuevas entidades o puertos en `core/entities` y `core/ports`.
+   - Implementa adaptadores adicionales en `infrastructure`.
 
-Para ejecutar pruebas de integración:
-```
-export AWS_SAM_STACK_NAME=<your-stack-name>
-python -m pytest tests/integration
-```
+## Contribuciones
 
-### Uso de la API
+Esta plantilla está diseñada para ser un punto de partida flexible. Siéntete libre de personalizarla y adaptarla según tus necesidades.
 
-Después del despliegue, puede crear una nueva transacción enviando una solicitud GET al endpoint `/new-transaction`. La URL de API Gateway se proporcionará en las salidas del stack de CloudFormation.
+---
 
-Ejemplo usando curl:
-```
-curl https://<api-id>.execute-api.<region>.amazonaws.com/Prod/new-transaction/
-```
-
-### Solución de Problemas
-
-1. Errores 5xx en API Gateway:
-   - Verifique los Logs de CloudWatch para la función Lambda.
-   - Asegúrese de que la función Lambda tenga los permisos correctos.
-
-2. Fallos en el despliegue:
-   - Verifique que sus credenciales de AWS estén configuradas correctamente.
-   - Compruebe si hay errores de sintaxis en la plantilla SAM.
-
-3. Fallos en pruebas de integración:
-   - Asegúrese de que la variable de entorno `AWS_SAM_STACK_NAME` esté configurada correctamente.
-   - Verifique que el endpoint de API Gateway sea accesible.
-
-Para habilitar registros detallados para la función Lambda, modifique el archivo `template.yaml`:
-
-```yaml
-Resources:
-  TransactionFunction:
-    Properties:
-      Environment:
-        Variables:
-          LOG_LEVEL: DEBUG
-```
-
-Luego, vuelva a desplegar la aplicación.
-
-## Flujo de Datos
-
-El flujo de datos de la solicitud a través de la aplicación sigue estos pasos:
-
-1. El cliente envía una solicitud GET al endpoint `/new-transaction` de API Gateway.
-2. API Gateway reenvía la solicitud a la función Lambda `TransactionFunction`.
-3. El manejador Lambda en `create_transaction.py` procesa la solicitud.
-4. Se crea una nueva entidad Transacción usando la clase `Transaction` de `transaction.py`.
-5. La transacción se valida y procesa (en este ejemplo, es solo una respuesta simulada).
-6. La función Lambda devuelve una respuesta, que se envía de vuelta a través de API Gateway al cliente.
-
-```
-Cliente -> API Gateway -> Lambda (TransactionFunction) -> Entidad Transacción -> Lambda -> API Gateway -> Cliente
-```
-
-Nota: La implementación actual no incluye persistencia de datos real. En un entorno de producción, típicamente se agregaría un paso de interacción con la base de datos después de la creación de la entidad Transacción.
-
-## Infraestructura
-
-La infraestructura para este proyecto está definida en el archivo `template.yaml` usando AWS SAM. Los recursos clave incluyen:
-
-- Lambda:
-  - TransactionFunction: Maneja la creación de nuevas transacciones.
-    - Runtime: Python 3.12.
-    - Handler: `infrastructure.api.create_transaction.lambda_handler`.
-    - Timeout: 3 segundos.
-    - Logging: Formato JSON.
-
-- API Gateway:
-  - Endpoint: `/new-transaction` (método GET).
-  - Integrado con `TransactionFunction`.
-
-La plantilla SAM también define salidas para la URL de API Gateway, el ARN de la función Lambda y el ARN del rol IAM, que pueden ser útiles para configuraciones de integración o monitoreo adicionales.
+Con esta base, puedes desarrollar rápidamente aplicaciones escalables y bien organizadas siguiendo los principios de la arquitectura hexagonal.
 

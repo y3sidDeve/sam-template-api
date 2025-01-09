@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: |
   simu-app
-  Sample SAM Template for simu-app
+  Sample SAM Template for Src Recurso de plantilla
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -19,7 +19,7 @@ Resources:
   TransactionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: simu_app/
+      CodeUri: src/
       Handler: infrastructure.api.create_transaction.lambda_handler
       Runtime: python3.12
       Architectures:
@@ -34,7 +34,7 @@ Resources:
   CreateUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: simu_app/
+      CodeUri: src/
       Handler: infrastructure.api.create_user.lambda_handler
       Runtime: python3.12
       Architectures:
@@ -50,7 +50,7 @@ Resources:
   GetAllUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: simu_app/
+      CodeUri: src/
       Handler: infrastructure.api.get_all_users.lambda_handler
       Runtime: python3.12
       Architectures:
@@ -66,7 +66,7 @@ Resources:
   GetUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: simu_app/
+      CodeUri: src/
       Handler: infrastructure.api.get_user.lambda_handler
       Runtime: python3.12
       Architectures:
