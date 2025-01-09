@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from simu_app.domain.entities.user import User
+from domain.entities.user import User
 
 class UserRepository(ABC):
     @abstractmethod

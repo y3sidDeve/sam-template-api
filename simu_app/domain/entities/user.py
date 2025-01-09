@@ -11,8 +11,11 @@ class User:
     updated_at: Optional[datetime] = None
 
     def to_dict(self) -> dict:
+        """
+        Convert the User object to a dictionary.
+        """
         return {
-            'id': self.id,
+            'userId': self.id,
             'username': self.username,
             'email': self.email,
             'created_at': self.created_at.isoformat(),
@@ -21,10 +24,14 @@ class User:
 
     @staticmethod
     def from_dict(data: dict) -> 'User':
+        """
+        Create a User object from a dictionary.
+        """
         return User(
-            id=data['id'],
-            username=data['username'],
+            id=data['userId'],  # Corregido: coincide con el nombre de la clave en DynamoDB
+            username=data['username'],  # Corregido: coincide con el nombre de la clave en DynamoDB
             email=data['email'],
             created_at=datetime.fromisoformat(data['created_at']),
             updated_at=datetime.fromisoformat(data['updated_at']) if data.get('updated_at') else None
         )
+

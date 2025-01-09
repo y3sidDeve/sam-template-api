@@ -3,17 +3,20 @@ import uuid
 from datetime import datetime
 from http import HTTPStatus
 
-from simu_app.domain.entities.user import User
-from simu_app.infrastructure.repositories.dynamodb_user_repository import DynamoDBUserRepository
+from domain.entities.user import User
+from infrastructure.repositories.dynamodb_user_repository import DynamoDBUserRepository
+
 
 def lambda_handler(event, context):
+    
+    
+    timezone = datetime.now().astimezone().tzinfo
     try:
         # Parse request body
         body = json.loads(event['body'])
-        
-        
+
         # print(json.dumps(body))
-        
+
         # Validate required fields
         required_fields = ['username', 'email']
         if not all(field in body for field in required_fields):
@@ -27,12 +30,14 @@ def lambda_handler(event, context):
             id=str(uuid.uuid4()),
             username=body['username'],
             email=body['email'],
-            created_at=datetime.utcnow()
+            # from datetime import timezone
+            created_at=datetime.now(timezone.utc)
         )
 
         # Initialize repository
+
         repository = DynamoDBUserRepository(table_name='Users')
-        
+
         # Check if user with email already exists
         existing_user = repository.get_by_email(user.email)
         if existing_user:

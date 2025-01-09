@@ -1,20 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: |
   simu-app
-
   Sample SAM Template for simu-app
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
+  # Function: Defines a serverless function.
+  # Timeout: Sets the maximum time (in seconds) that the function is allowed to run before it is terminated.
   Function:
-    Timeout: 3
+    Timeout: 20
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
       LogFormat: JSON
-Resources:
 
+Resources:
   TransactionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -22,7 +23,7 @@ Resources:
       Handler: infrastructure.api.create_transaction.lambda_handler
       Runtime: python3.12
       Architectures:
-      - x86_64
+        - x86_64
       Events:
         NewEndpoint:
           Type: Api
@@ -37,12 +38,12 @@ Resources:
       Handler: infrastructure.api.create_user.lambda_handler
       Runtime: python3.12
       Architectures:
-      - x86_64
+        - x86_64
       Events:
         CreateUser:
           Type: Api
           Properties:
-            Path: /users
+            Path: /users/
             Method: POST
 
   GetUserFunction:
@@ -52,12 +53,16 @@ Resources:
       Handler: infrastructure.api.get_user.lambda_handler
       Runtime: python3.12
       Architectures:
-      - x86_64
+        - x86_64
+
+      Environment:
+        Variables:
+          DYNAMODB_ENDPOINT: http://localhost:8000
       Events:
         GetUser:
           Type: Api
           Properties:
-            Path: /users/{userId}
+            Path: /users/{user_id}
             Method: GET
 
   UsersTable:
@@ -67,15 +72,24 @@ Resources:
       AttributeDefinitions:
         - AttributeName: userId
           AttributeType: S
+        - AttributeName: email
+          AttributeType: S
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-  
-
-  
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: Environment
+          Value: Development
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -84,10 +98,20 @@ Outputs:
 
   TransactionApi:
     Description: API Gateway endpoint URL for Prod stage for Transaction function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/new-transaction/"
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/new-transaction/
   TransactionFunction:
     Description: Transaction Lambda Function ARN
     Value: !GetAtt TransactionFunction.Arn
   TransactionFunctionIamRole:
     Description: Implicit IAM Role created for Transaction function
     Value: !GetAtt TransactionFunctionRole.Arn
+
+  GetUserApi:
+    Description: API Gateway endpoint URL for Prod stage for GetUser function
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/users/
+  GetUserFunction:
+    Description: GetUser Lambda Function ARN
+    Value: !GetAtt GetUserFunction.Arn
+  GetUserFunctionIamRole:
+    Description: Implicit IAM Role created for GetUser function
+    Value: !GetAtt GetUserFunctionRole.Arn

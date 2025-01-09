@@ -1,14 +1,20 @@
 # Repository implementation for User entity using DynamoDB as storage
 import boto3
+import logging
 from typing import Optional
-from simu_app.domain.entities.user import User 
-from simu_app.domain.ports.user_repository import UserRepository
+from domain.entities.user import User
+from domain.ports.user_repository import UserRepository
+from botocore.exceptions import ClientError
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class DynamoDBUserRepository(UserRepository):
     """
     Repository class that implements UserRepository interface using DynamoDB
     """
-    
+
     def __init__(self, table_name: str):
         """
         Initialize repository with DynamoDB table name
@@ -27,7 +33,16 @@ class DynamoDBUserRepository(UserRepository):
             Created User entity
         """
         user_dict = user.to_dict()
-        self.table.put_item(Item=user_dict)
+        logger.debug(f"Creating user with data: {user_dict}")
+        try:
+            self.table.put_item(Item=user_dict)
+            logger.info(f"User created successfully: {user_dict}")
+        except ClientError as e:
+            logger.error(f"Failed to create user: {e.response['Error']['Message']}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            raise
         return user
 
     def get_by_id(self, user_id: str) -> Optional[User]:
@@ -38,9 +53,22 @@ class DynamoDBUserRepository(UserRepository):
         Returns:
             User entity if found, None otherwise
         """
-        response = self.table.get_item(Key={'id': user_id})
-        item = response.get('Item')
-        return User.from_dict(item) if item else None
+        logger.debug(f"Retrieving user by ID: {user_id}")
+        try:
+            response = self.table.get_item(Key={'userId': user_id})
+            item = response.get('Item')
+            if item:
+                logger.info(f"User retrieved successfully: {item}")
+                return User.from_dict(item)
+            else:
+                logger.info(f"No user found with ID: {user_id}")
+                return None
+        except ClientError as e:
+            logger.error(f"Failed to retrieve user: {e.response['Error']['Message']}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return None
 
     def get_by_email(self, email: str) -> Optional[User]:
         """
@@ -50,10 +78,23 @@ class DynamoDBUserRepository(UserRepository):
         Returns:
             User entity if found, None otherwise
         """
-        response = self.table.query(
-            IndexName='email-index',
-            KeyConditionExpression='email = :email',
-            ExpressionAttributeValues={':email': email}
-        )
-        items = response.get('Items', [])
-        return User.from_dict(items[0]) if items else None
+        logger.debug(f"Retrieving user by email: {email}")
+        try:
+            response = self.table.query(
+                IndexName='email-index',
+                KeyConditionExpression='email = :email',
+                ExpressionAttributeValues={':email': email}
+            )
+            items = response.get('Items', [])
+            if items:
+                logger.info(f"User retrieved successfully: {items[0]}")
+                return User.from_dict(items[0])
+            else:
+                logger.info(f"No user found with email: {email}")
+                return None
+        except ClientError as e:
+            logger.error(f"Failed to retrieve user: {e.response['Error']['Message']}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return None
